@@ -7,6 +7,7 @@
  * Author: Tevyn Vergara
  *
  ***********************************************************************************/
+#include <math.h>
 #include <stdio.h>
 #include "DDS_Driver.h"
 #include "usb_device.h"
@@ -37,7 +38,8 @@ void AD9833_Init(void) {
 
 void AD9833_SetFrequency(uint32_t freq) {
     //uint32_t freq_reg = ((uint64_t)freq * 268435456ULL) / AD9833_MCLK;
-	uint32_t freq_reg = ((uint64_t)(freq * 10) + (freq * 288054/390625));
+	//uint32_t freq_reg = ((uint64_t)(freq * 10) + (freq * 288054/390625));
+	uint32_t freq_reg =(int)(((freq*pow(2,28))/AD9833_MCLK)+1);
     uint16_t freq_LSB = freq_reg & 0x3FFF;
     uint16_t freq_MSB = (freq_reg >> 14) & 0x3FFF;
 
@@ -54,7 +56,6 @@ void AD9833_SetFrequency(uint32_t freq) {
     // Write LSB first, then MSB
     AD9833_SendCommand(0x4000 | freq_LSB);
     AD9833_SendCommand(0x8000 | freq_MSB);
-
 }
 
 /* Set phase */
@@ -62,7 +63,6 @@ void AD9833_SetPhase(uint16_t phase) {
     uint16_t phase_val = (phase * 4096) / 360;
     AD9833_SendCommand(0xC000 | (phase_val & 0x0FFF)); // Write to PHASE0
 }
-
 
 /* Enable continuous waveform output */
 void AD9833_EnableContinuousOutput(void) {

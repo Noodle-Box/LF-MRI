@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 /* Includes ------------------------------------------------------------------*/
 #include <stdio.h>
+#include <string.h>
 #include "DDS_Driver.h"
 #include "usbd_cdc_if.h"
 
@@ -45,22 +46,12 @@ TIM_HandleTypeDef htim6;
 
 /* USER CODE END PM */
 
-/* Private variables ---------------------------------------------------------*/
-SPI_HandleTypeDef hspi2;
-
-TIM_HandleTypeDef htim6;
-
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
 
 /* USER CODE END PV */
 
-/* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_TIM6_Init(void);
-static void MX_SPI2_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -72,6 +63,9 @@ static void MX_SPI2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+char *data = "DDC USB Testing is valid\n";
+
 int console_write(int file, char *ptr, int len) {
     CDC_Transmit_FS((uint8_t*)ptr, len);  // Send data via USB CDC
     return len;
@@ -263,6 +257,8 @@ int main(void)
   {
     /* USER CODE END WHILE */
 	HAL_Delay(10);
+	CDC_Transmit_FS((uint8_t *) data, strlen(data));
+    HAL_Delay(2000);
 
     /* USER CODE BEGIN 3 */
   }
@@ -283,7 +279,6 @@ void Error_Handler(void)
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1){
-
   }
   /* USER CODE END Error_Handler_Debug */
 }

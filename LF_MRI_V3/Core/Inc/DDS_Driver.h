@@ -1,10 +1,12 @@
-/*
- * DDS_Driver.h
+/************************************************************************************
  *
- *  Created on: Feb 3, 2025
- *      Author: Tevyn
- */
-
+ * DDS Library Header for AD9833
+ * Project: Low Field - MRI
+ * UQ Centre for Advanced Engineering
+ *
+ * Author: Tevyn Vergara
+ *
+ ***********************************************************************************/
 #ifndef SRC_DDS_DRIVER_H_
 #define SRC_DDS_DRIVER_H_
 
