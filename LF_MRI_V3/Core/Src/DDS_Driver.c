@@ -20,64 +20,69 @@
 
 /* Helper function to send data */
 void AD9833_SendCommand(uint16_t cmd) {
+    uint8_t data[2];
+    data[0] = (cmd >> 8) & 0xFF;
+    data[1] = cmd & 0xFF;
+
+    char buffer[128];
+
+    // Print SPI transmission
+    sprintf(buffer, "SPI TX: 0x%04X | Bytes: 0x%02X 0x%02X\r\n", cmd, data[0], data[1]);
+    CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
+    HAL_Delay(10);
+
+    // Send SPI command
     HAL_GPIO_WritePin(AD9833_FSYNC_PORT, AD9833_FSYNC_PIN, GPIO_PIN_RESET);
-    HAL_SPI_Transmit(AD9833_SPI, (uint8_t*)&cmd, 1, HAL_MAX_DELAY);
-    HAL_Delay(1);
+    HAL_SPI_Transmit(AD9833_SPI, data, 2, HAL_MAX_DELAY);
     HAL_GPIO_WritePin(AD9833_FSYNC_PORT, AD9833_FSYNC_PIN, GPIO_PIN_SET);
 }
 
 /* Initialise AD9833 */
 void AD9833_Init(void) {
-    // Step 1: Reset AD9833 and enable 28-bit mode
-    AD9833_SendCommand(0x2100);		// Control Register
-    //AD9833_SendCommand(0x50C7); 	// Frequency Register 0 LSB
-    //AD9833_SendCommand(0x4000); 	// Frequency Register 0 MSB
+    // Force AD9833 into reset mode
+    AD9833_SendCommand(AD9833_RESET | AD9833_B28);
+    HAL_Delay(10);
 
-    // Step 2: Exit reset and enable waveform generation
-    AD9833_SendCommand(0x2000); 	// Select FREQ0 and PHASE0
+    // Set initial frequency (e.g., 1kHz)
+    AD9833_SetFrequency(1000);
+
+    // **Explicitly clear reset bit** to start waveform generation
+    AD9833_SendCommand(0x2000);
 }
 
+
 void AD9833_SetFrequency(uint32_t freq) {
-    //uint64_t freq_reg = ((uint64_t)freq * 268435456ULL) / AD9833_MCLK;
+    uint32_t freq_reg = (uint32_t)(((uint64_t)freq * 268435456ULL) / AD9833_MCLK);
+    freq_reg &= 0x0FFFFFFF;
 
-	// uint32_t freq_reg = (uint32_t)(((uint64_t)freq * 10737UL + 500UL) / 1000UL); // 2^28 * f / f_MCLK
-	// uint32_t freq;
-	uint32_t freq_reg = (uint32_t)(((uint64_t)freq * 268435456ULL) / AD9833_MCLK);
+    uint16_t freq_LSB = (freq_reg & 0x3FFF);
+    uint16_t freq_MSB = ((freq_reg >> 14) & 0x3FFF);
 
-	freq_reg &= 0x0FFFFFFFUL; 									// Ensure frequency data fits in 28-bit range
-	uint16_t freq_LSB = (freq_reg & 0x3FFF) | 0x4000; 			// Lower 14 bits with control
-	uint16_t freq_MSB = ((freq_reg >> 14) & 0x3FFF) | 0x8000; 	// Upper 14 bits with control
+    // Add a separator before printing new frequency
 
-    char buffer[128];  // Increased buffer size for clarity
-
-    // Debug Output to USB CDC Terminal
-    sprintf(buffer, "Requested Frequency: %lu Hz\n", freq);
+    char buffer[128];
+    sprintf(buffer, "\r\n=================================\r\n");
     CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
     HAL_Delay(10);
 
-
-    /* DEBUG THIS CAUSE IT AIN'T WORKING
-     *
-     * Calc 1000Hz = 0x29F1
-     * Calc 5000Hz = 0xD1B7
-     *
-     * Calc 100kHz = 0x10624D
-     * Calc 500kHz = 0x51EB85
-     */
-    sprintf(buffer, "Calculated FREQREG: 0x%08X\n", freq_reg);
+    sprintf(buffer, "Setting Frequency: %lu Hz\r\n", freq);
     CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
     HAL_Delay(10);
 
-    sprintf(buffer, "FREQ_LSB: 0x%04X | FREQ_MSB: 0x%04X\n", freq_LSB, freq_MSB);
+    sprintf(buffer, "FREQ_LSB: 0x%04X | FREQ_MSB: 0x%04X\r\n", freq_LSB, freq_MSB);
     CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
     HAL_Delay(10);
 
-    // Enable writing to FREQ0 register (B28 mode)
-    AD9833_SendCommand(AD9833_B28 | 0x2000);
+    // Force AD9833 to accept new frequency
+    AD9833_SendCommand(AD9833_RESET | AD9833_B28);
+    HAL_Delay(10);
 
-    // Write LSB first, then MSB
+    // Send LSB first, then MSB
     AD9833_SendCommand(0x4000 | freq_LSB);
     AD9833_SendCommand(0x8000 | freq_MSB);
+
+    // Explicitly enable waveform generation again
+    AD9833_SendCommand(0x2000);
 }
 
 
