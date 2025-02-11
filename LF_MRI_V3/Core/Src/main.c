@@ -253,14 +253,9 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
-	HAL_Delay(10);
-	CDC_Transmit_FS((uint8_t *) data, strlen(data));
-    HAL_Delay(2000);
-
-    /* USER CODE BEGIN 3 */
+  while (1) {
+      HAL_Delay(10000); // Delay to prevent excessive logging
+      AD9833_SetFrequency(100000); // Set frequency and send debug output
   }
   /* USER CODE END 3 */
 }

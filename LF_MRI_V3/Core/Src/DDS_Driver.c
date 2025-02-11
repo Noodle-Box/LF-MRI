@@ -37,21 +37,42 @@ void AD9833_Init(void) {
 }
 
 void AD9833_SetFrequency(uint32_t freq) {
-    //uint32_t freq_reg = ((uint64_t)freq * 268435456ULL) / AD9833_MCLK;
-	//uint32_t freq_reg = ((uint64_t)(freq * 10) + (freq * 288054/390625));
-	uint32_t freq_reg =(int)(((freq*pow(2,28))/AD9833_MCLK)+1);
-    uint16_t freq_LSB = freq_reg & 0x3FFF;
-    uint16_t freq_MSB = (freq_reg >> 14) & 0x3FFF;
+    //uint64_t freq_reg = ((uint64_t)freq * 268435456ULL) / AD9833_MCLK;
 
-    char buffer[64];
-    sprintf(buffer, "Requested Freq: %lu Hz | FREQREG: 0x%08lX\n", freq, freq_reg);
+	// uint32_t freq_reg = (uint32_t)(((uint64_t)freq * 10737UL + 500UL) / 1000UL); // 2^28 * f / f_MCLK
+	// uint32_t freq;
+	uint32_t freq_reg = (uint32_t)(((uint64_t)freq * 268435456ULL) / AD9833_MCLK);
+
+	freq_reg &= 0x0FFFFFFFUL;
+	uint16_t freq_LSB = (freq_reg & 0x3FFF) | 0x4000; // Ensuring correct control bits
+	uint16_t freq_MSB = ((freq_reg >> 14) & 0x3FFF) | 0x8000;
+
+    char buffer[128];  // Increased buffer size for clarity
+
+    // Debug Output to USB CDC Terminal
+    sprintf(buffer, "Requested Frequency: %lu Hz\n", freq);
     CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
+    HAL_Delay(10);
+
+
+    /* DEBUG THIS CAUSE IT AIN'T WORKING
+     *
+     * Calc 1000Hz = 0x29F1
+     * Calc 5000Hz = 0xD1B7
+     *
+     * Calc 100kHz = 0x10624D
+     * Calc 500kHz = 0x51EB85
+     */
+    sprintf(buffer, "Calculated FREQREG: 0x%08X\n", freq_reg);
+    CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
+    HAL_Delay(10);
 
     sprintf(buffer, "FREQ_LSB: 0x%04X | FREQ_MSB: 0x%04X\n", freq_LSB, freq_MSB);
     CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
+    HAL_Delay(10);
 
     // Enable writing to FREQ0 register (B28 mode)
-    AD9833_SendCommand(AD9833_B28 | AD9833_FSELECT | 0x2000);
+    AD9833_SendCommand(AD9833_B28 | 0x2000);
 
     // Write LSB first, then MSB
     AD9833_SendCommand(0x4000 | freq_LSB);
