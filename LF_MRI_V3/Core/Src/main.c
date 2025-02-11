@@ -255,11 +255,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1) {
       AD9833_SetFrequency(1000);   // 1 kHz
-      HAL_Delay(5000);
+      HAL_Delay(2500);
       AD9833_SetFrequency(5000);   // 5 kHz
-      HAL_Delay(5000);
+      HAL_Delay(2500);
       AD9833_SetFrequency(10000);  // 10 kHz
-      HAL_Delay(5000);
+      HAL_Delay(2500);
   }
 
   /* USER CODE END 3 */

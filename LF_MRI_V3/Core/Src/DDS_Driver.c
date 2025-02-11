@@ -81,6 +81,9 @@ void AD9833_SetFrequency(uint32_t freq) {
     AD9833_SendCommand(0x4000 | freq_LSB);
     AD9833_SendCommand(0x8000 | freq_MSB);
 
+    // **Extra clock cycle to force register refresh**
+    AD9833_SendCommand(0xC000);  // Phase register write (forces update)
+
     // Explicitly enable waveform generation again
     AD9833_SendCommand(0x2000);
 }
