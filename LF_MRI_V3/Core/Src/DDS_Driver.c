@@ -29,11 +29,12 @@ void AD9833_SendCommand(uint16_t cmd) {
 /* Initialise AD9833 */
 void AD9833_Init(void) {
     // Step 1: Reset AD9833 and enable 28-bit mode
-    AD9833_SendCommand(AD9833_B28 | AD9833_RESET);
-    HAL_Delay(10);
+    AD9833_SendCommand(0x2100);		// Control Register
+    //AD9833_SendCommand(0x50C7); 	// Frequency Register 0 LSB
+    //AD9833_SendCommand(0x4000); 	// Frequency Register 0 MSB
 
     // Step 2: Exit reset and enable waveform generation
-    AD9833_SendCommand(0x2000); // Select FREQ0 and PHASE0
+    AD9833_SendCommand(0x2000); 	// Select FREQ0 and PHASE0
 }
 
 void AD9833_SetFrequency(uint32_t freq) {
@@ -43,9 +44,9 @@ void AD9833_SetFrequency(uint32_t freq) {
 	// uint32_t freq;
 	uint32_t freq_reg = (uint32_t)(((uint64_t)freq * 268435456ULL) / AD9833_MCLK);
 
-	freq_reg &= 0x0FFFFFFFUL;
-	uint16_t freq_LSB = (freq_reg & 0x3FFF) | 0x4000; // Ensuring correct control bits
-	uint16_t freq_MSB = ((freq_reg >> 14) & 0x3FFF) | 0x8000;
+	freq_reg &= 0x0FFFFFFFUL; 									// Ensure frequency data fits in 28-bit range
+	uint16_t freq_LSB = (freq_reg & 0x3FFF) | 0x4000; 			// Lower 14 bits with control
+	uint16_t freq_MSB = ((freq_reg >> 14) & 0x3FFF) | 0x8000; 	// Upper 14 bits with control
 
     char buffer[128];  // Increased buffer size for clarity
 
@@ -78,6 +79,7 @@ void AD9833_SetFrequency(uint32_t freq) {
     AD9833_SendCommand(0x4000 | freq_LSB);
     AD9833_SendCommand(0x8000 | freq_MSB);
 }
+
 
 /* Set phase */
 void AD9833_SetPhase(uint16_t phase) {
