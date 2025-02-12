@@ -24,16 +24,21 @@ void AD9833_SendCommand(uint16_t cmd) {
     data[0] = (cmd >> 8) & 0xFF;
     data[1] = cmd & 0xFF;
 
+    // Debug Print
     char buffer[128];
-
-    // Print SPI transmission
     sprintf(buffer, "SPI TX: 0x%04X | Bytes: 0x%02X 0x%02X\r\n", cmd, data[0], data[1]);
     CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
     HAL_Delay(10);
 
-    // Send SPI command
+    // **Ensure FSYNC is HIGH before sending**
+    HAL_GPIO_WritePin(AD9833_FSYNC_PORT, AD9833_FSYNC_PIN, GPIO_PIN_SET);
+    HAL_Delay(1); // Ensure timing stability
+
+    // **Drop FSYNC LOW to start transmission**
     HAL_GPIO_WritePin(AD9833_FSYNC_PORT, AD9833_FSYNC_PIN, GPIO_PIN_RESET);
     HAL_SPI_Transmit(AD9833_SPI, data, 2, HAL_MAX_DELAY);
+
+    // **Set FSYNC HIGH immediately after transmission**
     HAL_GPIO_WritePin(AD9833_FSYNC_PORT, AD9833_FSYNC_PIN, GPIO_PIN_SET);
 }
 
@@ -73,10 +78,6 @@ void AD9833_SetFrequency(uint32_t freq) {
     CDC_Transmit_FS((uint8_t*)buffer, strlen(buffer));
     HAL_Delay(10);
 
-    // Force AD9833 to accept new frequency
-    AD9833_SendCommand(AD9833_RESET | AD9833_B28);
-    HAL_Delay(10);
-
     // Send LSB first, then MSB
     AD9833_SendCommand(0x4000 | freq_LSB);
     AD9833_SendCommand(0x8000 | freq_MSB);
@@ -100,8 +101,3 @@ void AD9833_EnableContinuousOutput(void) {
     AD9833_SendCommand(0x2000); // Select FREQ0 and PHASE0
     AD9833_SendCommand(0x0000); // Ensure DAC is enabled and sine wave mode is active
 }
-
-
-
-
-

@@ -256,9 +256,7 @@ int main(void)
   while (1) {
       AD9833_SetFrequency(1000);   // 1 kHz
       HAL_Delay(2500);
-      AD9833_SetFrequency(5000);   // 5 kHz
-      HAL_Delay(2500);
-      AD9833_SetFrequency(10000);  // 10 kHz
+      AD9833_SetFrequency(1000000);   // 1 MHz
       HAL_Delay(2500);
   }
 
