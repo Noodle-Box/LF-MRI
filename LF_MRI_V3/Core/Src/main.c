@@ -220,6 +220,9 @@ int main(void)
 
   /* MCU Configuration--------------------------------------------------------*/
 
+  /* User defined variables */
+  uint32_t freq = 1000000; 	// Frequency, Hz
+  uint16_t phase = 0; 		// Phase, Rads
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
@@ -244,9 +247,8 @@ int main(void)
 
   /* DDS Init and parameter configurations */
   AD9833_Init(); 	// Initialise the DDS
-  AD9833_SetFrequency(100000); // Adjustable Frequency (Hz)
-  AD9833_SetPhase(0);        // 0-degree phase shift
-  AD9833_EnableContinuousOutput(); // Keep DDS running continuously
+  //AD9833_WaveSet(freq, phase);
+  //AD9833_EnableContinuousOutput(); // Keep DDS running continuously
 
 
   /* USER CODE END 2 */
@@ -254,10 +256,8 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1) {
-      AD9833_SetFrequency(1000);   // 1 kHz
-      HAL_Delay(2500);
-      AD9833_SetFrequency(1000000);   // 1 MHz
-      HAL_Delay(2500);
+	  AD9833_WaveSet(freq, phase);
+	  HAL_Delay(5000);
   }
 
   /* USER CODE END 3 */

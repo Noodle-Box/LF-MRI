@@ -32,8 +32,7 @@ extern SPI_HandleTypeDef hspi2;
 
 // Function Prototypes
 void AD9833_Init(void);
-void AD9833_SetFrequency(uint32_t freq);
-void AD9833_SetPhase(uint16_t phase);
+void AD9833_WaveSet(uint32_t freq, uint16_t phase);
 void AD9833_SendCommand(uint16_t cmd);
 void AD9833_EnableContinuousOutput(void);
 
